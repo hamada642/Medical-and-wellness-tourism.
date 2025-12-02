@@ -1,528 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Medical & Wellness Tourism — App</title>
-<style>
-  :root{
-    --card-bg: linear-gradient(135deg,#4b79a1,#283e51);
-    --primary:#007BFF;
-    --accent:#28a745;
-    --danger:#c00;
-    --box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-    --radius:12px;
-    --pad:14px;
-  }
-  body{font-family:Inter,Arial,Helvetica,sans-serif;background:#f3f6fb;margin:0;padding:20px;box-sizing:border-box;}
-  .center{max-width:980px;margin:18px auto;}
-  .card{background:#fff;border-radius:var(--radius);box-shadow:var(--box-shadow);padding:18px;margin-bottom:16px;}
-  .hidden{display:none;}
-  /* language selector */
-  #langBox{display:flex;gap:8px;justify-content:center;margin:22px 0;}
-  button, input, textarea, select {font-size:15px;font-family:inherit}
-  .btn{display:inline-block;padding:10px 14px;border-radius:10px;border:0;background:var(--primary);color:#fff;cursor:pointer}
-  .btn.secondary{background:#6c757d}
-  .btn.danger{background:var(--danger)}
-  .row{display:flex;gap:12px;flex-wrap:wrap}
-  .col{flex:1;min-width:220px}
-  input[type="text"], input[type="password"], input[type="number"], select, textarea{
-    width:100%;padding:10px;border-radius:8px;border:1px solid #d6dbe0;box-sizing:border-box;
-  }
-  h2,h3{margin:8px 0}
-  /* payment card visual */
-  .pay-visual{width:100%;max-width:420px;margin:14px auto;background:var(--card-bg);color:#fff;padding:18px;border-radius:12px;box-shadow:0 10px 30px rgba(35,47,63,0.2)}
-  .pay-visual .chip{width:44px;height:30px;background:rgba(255,255,255,0.25);border-radius:6px;margin-bottom:14px}
-  .pay-visual .number{font-size:20px;letter-spacing:3px;margin:8px 0}
-  .pay-visual .row{justify-content:space-between;align-items:center}
-  .small-muted{color:#6b7280;font-size:13px}
-  .right{text-align:right}
-  /* layout */
-  nav{display:flex;gap:6px;align-items:center;justify-content:space-between;margin-bottom:12px}
-  nav .left, nav .right{display:flex;gap:8px;align-items:center}
-  nav a{color:var(--primary);text-decoration:none}
-  footer{font-size:13px;color:#6b7280;text-align:center;margin-top:18px}
-  /* responsive tweaks */
-  @media(max-width:720px){.row{flex-direction:column}}
-</style>
-</head>
-<body>
-<div class="center">
-
-  <!-- language selection (first screen) -->
-  <div id="langSelect" class="card">
-    <h3>Select language / اختر اللغة</h3>
-    <div id="langBox">
-      <button class="btn" onclick="setLang('en')">English</button>
-      <button class="btn" onclick="setLang('ar')">العربية</button>
-    </div>
-    <p style="text-align:center;color:#666;margin:0">You will be able to switch languages later from Settings.</p>
-  </div>
-
-  <!-- SETUP: initial password -->
-  <div id="setupCard" class="card hidden">
-    <h3 id="setupTitle">Set master password (first time)</h3>
-    <div class="row">
-      <div class="col"><input id="setupP1" type="password" placeholder="New password"></div>
-      <div class="col"><input id="setupP2" type="password" placeholder="Repeat password"></div>
-    </div>
-    <div style="text-align:center;margin-top:10px">
-      <button class="btn" onclick="doSetInitial()">Save password</button>
-    </div>
-    <p class="small-muted" style="margin-top:8px">Only you (the owner) will be able to change this password from Settings.</p>
-  </div>
-
-  <!-- LOGIN -->
-  <div id="loginCard" class="card hidden">
-    <h3 id="loginTitle">Login</h3>
-    <input id="loginInput" type="password" placeholder="Enter password">
-    <div style="text-align:center">
-      <button class="btn" onclick="doLogin()">Login</button>
-    </div>
-  </div>
-
-  <!-- NAV / top bar shown in dashboard -->
-  <nav id="topNav" class="card hidden" style="align-items:center">
-    <div class="left">
-      <strong id="appTitle">Medical & Wellness Dashboard</strong>
-    </div>
-    <div class="right">
-      <span id="langIndicator" class="small-muted"></span>
-      <button class="btn secondary" onclick="openPage('settingsCard')" id="settingsBtn">Settings</button>
-      <button class="btn" onclick="openPage('dashboardCard')" id="dashBtn">Dashboard</button>
-      <button class="btn danger" onclick="doLogout()" id="logoutBtn">Logout</button>
-    </div>
-  </nav>
-
-  <!-- DASHBOARD -->
-  <div id="dashboardCard" class="card hidden">
-    <h2 id="dashTitle">Dashboard</h2>
-    <div class="row">
-      <div class="col">
-        <button class="btn" onclick="openPage('hospCard')" id="hospBtn">Hospital Bookings</button>
-      </div>
-      <div class="col">
-        <button class="btn" onclick="openPage('consultCard')" id="consultBtn">Medical Consultations</button>
-      </div>
-      <div class="col">
-        <button class="btn" onclick="openPage('fitnessCard')" id="fitnessBtn">Fitness Plans</button>
-      </div>
-      <div class="col">
-        <button class="btn" onclick="openPage('tourismCard')" id="tourismBtn">Medical Tourism</button>
-      </div>
-    </div>
-
-    <!-- quick payment button (client visible) -->
-    <div style="margin-top:14px">
-      <h3 id="paySectionTitle">Payments</h3>
-      <p class="small-muted" id="paySectionDesc">Use the button below to pay for bookings. You will be redirected to a secure payment page (hosted by your payment provider).</p>
-
-      <div style="max-width:560px;margin:12px 0">
-        <!-- card visual + small form (non-sensitive) -->
-        <div class="pay-visual" id="payVisual">
-          <div class="chip"></div>
-          <div class="number" id="visNumber">**** **** **** ****</div>
-          <div class="row">
-            <div>
-              <div class="small-muted">Card holder</div>
-              <div id="visName">Guest</div>
-            </div>
-            <div class="right">
-              <div class="small-muted">Amount</div>
-              <div id="visAmount">0.00</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Non-sensitive inputs -->
-        <div class="card" style="padding:12px">
-          <input id="payerName" type="text" placeholder="Card holder name / اسم حامل البطاقة">
-          <input id="payAmount" type="number" min="1" placeholder="Amount (eg. 100.00) | المبلغ">
-          <select id="currencySelect">
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-            <option value="EGP">EGP</option>
-          </select>
-
-          <div style="display:flex;gap:10px;margin-top:10px">
-            <button class="btn" style="flex:1" onclick="handlePay()">Pay / ادفع الآن</button>
-            <button class="btn secondary" style="flex:1" onclick="clearPayForm()">Clear</button>
-          </div>
-
-          <p class="small-muted" style="margin-top:8px">
-            Note: For security, actual card entry is done on the hosted payment page. This form sends only non-sensitive info (name, amount) to the payment link.
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SETTINGS (only owner can edit payment link + change language + change password) -->
-  <div id="settingsCard" class="card hidden">
-    <h2 id="settingsTitle">Settings</h2>
-
-    <h3 id="paymentLinkTitle">Payment Link (owner only)</h3>
-    <p class="small-muted" id="paymentLinkDesc">Paste your hosted payment page link here (Stripe Payment Link, PayPal Link, PayCEC, ...). Customers will be redirected to that secure page.</p>
-    <input id="paymentLinkInput" type="text" placeholder="https://..." />
-    <div style="display:flex;gap:10px;margin-top:8px">
-      <button class="btn" onclick="savePaymentLink()">Save link</button>
-      <button class="btn secondary" onclick="openPaymentLinkForOwner()">Open link</button>
-    </div>
-    <div style="margin-top:12px">
-      <h3 id="changePassTitle">Change Master Password</h3>
-      <div class="row">
-        <div class="col"><input id="oldPass" type="password" placeholder="Current password"></div>
-        <div class="col"><input id="newPassA" type="password" placeholder="New password"></div>
-        <div class="col"><input id="newPassB" type="password" placeholder="Repeat new"></div>
-      </div>
-      <div style="margin-top:10px">
-        <button class="btn" onclick="doChangePassword()">Change Password</button>
-      </div>
-    </div>
-
-    <div style="margin-top:14px">
-      <h3 id="langSettingsTitle">Language</h3>
-      <div style="display:flex;gap:8px">
-        <button class="btn" onclick="setLangInline('en')">English</button>
-        <button class="btn" onclick="setLangInline('ar')">العربية</button>
-      </div>
-    </div>
-
-    <div style="margin-top:14px">
-      <button class="btn secondary" onclick="openPage('dashboardCard')">Back to Dashboard</button>
-    </div>
-  </div>
-
-  <!-- individual section cards (content editable by owner) -->
-  <div id="hospCard" class="card hidden">
-    <h2 id="hospTitle">Hospital Bookings</h2>
-    <textarea id="hospText" placeholder="Add booking details here..." style="height:140px"></textarea>
-    <div style="display:flex;gap:8px;margin-top:8px">
-      <button class="btn" onclick="saveSection('hosp')">Save</button>
-      <button class="btn secondary" onclick="openPage('dashboardCard')">Back</button>
-    </div>
-  </div>
-
-  <div id="consultCard" class="card hidden">
-    <h2 id="consultTitle">Medical Consultations</h2>
-    <textarea id="consultText" placeholder="Notes for doctors, patient history..." style="height:140px"></textarea>
-    <div style="display:flex;gap:8px;margin-top:8px">
-      <button class="btn" onclick="saveSection('consult')">Save</button>
-      <button class="btn secondary" onclick="openPage('dashboardCard')">Back</button>
-    </div>
-  </div>
-
-  <div id="fitnessCard" class="card hidden">
-    <h2 id="fitnessTitle">Fitness Plans</h2>
-    <textarea id="fitnessText" placeholder="Training plans, nutrition..." style="height:140px"></textarea>
-    <div style="display:flex;gap:8px;margin-top:8px">
-      <button class="btn" onclick="saveSection('fitness')">Save</button>
-      <button class="btn secondary" onclick="openPage('dashboardCard')">Back</button>
-    </div>
-  </div>
-
-  <div id="tourismCard" class="card hidden">
-    <h2 id="tourismTitle">Medical Tourism</h2>
-    <textarea id="tourismText" placeholder="Travel arrangements, hotels, notes..." style="height:140px"></textarea>
-    <div style="display:flex;gap:8px;margin-top:8px">
-      <button class="btn" onclick="saveSection('tourism')">Save</button>
-      <button class="btn secondary" onclick="openPage('dashboardCard')">Back</button>
-    </div>
-  </div>
-
-  <footer class="small-muted">© Medical & Wellness Tourism — Local single-file app</footer>
-
-</div>
-
-<script>
-/* ===========================
-   Translations (EN / AR)
-   =========================== */
-const TEXTS = {
-  en: {
-    setupTitle: "Set master password (first time)",
-    loginTitle: "Login",
-    appTitle: "Medical & Wellness Dashboard",
-    dashTitle: "Dashboard",
-    hospBtn: "Hospital Bookings",
-    consultBtn: "Medical Consultations",
-    fitnessBtn: "Fitness Plans",
-    tourismBtn: "Medical Tourism",
-    paySectionTitle: "Payments",
-    paySectionDesc: "Use the button below to pay for bookings. You will be redirected to a secure payment page.",
-    paymentLinkTitle: "Payment Link (owner only)",
-    paymentLinkDesc: "Paste your hosted payment page link here (Stripe/PayPal/PayCEC...). Customers will be redirected to that secure page.",
-    changePassTitle: "Change Master Password",
-    langSettingsTitle: "Language",
-    hospTitle: "Hospital Bookings",
-    consultTitle: "Medical Consultations",
-    fitnessTitle: "Fitness Plans",
-    tourismTitle: "Medical Tourism"
-  },
-  ar: {
-    setupTitle: "تعيين كلمة السر لأول مرة",
-    loginTitle: "تسجيل الدخول",
-    appTitle: "لوحة تحكم الطب والسياحة العلاجية",
-    dashTitle: "لوحة التحكم",
-    hospBtn: "حجوزات المستشفيات",
-    consultBtn: "الاستشارات الطبية",
-    fitnessBtn: "خطة اللياقة",
-    tourismBtn: "السياحة العلاجية",
-    paySectionTitle: "الدفع",
-    paySectionDesc: "استخدم الزر للدفع، ستنتقل إلى صفحة دفع آمنة لاستكمال عملية الدفع.",
-    paymentLinkTitle: "رابط الدفع (للمالك فقط)",
-    paymentLinkDesc: "ألصق رابط صفحة الدفع الآمنة هنا (Stripe/PayPal/PayCEC...). سيتم توجيه العملاء للصفحة الآمنة.",
-    changePassTitle: "تغيير كلمة السر الأساسية",
-    langSettingsTitle: "اللغة",
-    hospTitle: "حجوزات المستشفيات",
-    consultTitle: "الاستشارات الطبية",
-    fitnessTitle: "خطة اللياقة",
-    tourismTitle: "السياحة العلاجية"
-  }
-};
-
-let currentLang = 'en'; // will be set by user
-
-/* ===========================
-   Utility / UI helpers
-   =========================== */
-function el(id){ return document.getElementById(id); }
-function hideAllCards(){ 
-  ['setupCard','loginCard','dashboardCard','settingsCard','hospCard','consultCard','fitnessCard','tourismCard'].forEach(id=> el(id).classList.add('hidden'));
-  el('topNav').classList.add('hidden');
-}
-function openPage(id){
-  hideAllCards();
-  el(id).classList.remove('hidden');
-  if(id==='dashboardCard') el('topNav').classList.remove('hidden');
-  if(id==='settingsCard') el('topNav').classList.remove('hidden');
-  // when opening dashboard, init payment UI
-  if(id==='dashboardCard'){ initPayVisual(); loadNonSensitiveSaved(); }
-}
-
-/* ===========================
-   Language flow
-   =========================== */
-function setLang(lang){
-  currentLang = lang;
-  // hide language select
-  el('langSelect').classList.add('hidden');
-  localStorage.setItem('app_lang', lang);
-  applyLang(); // update visible text
-  // decide first view (setup or login)
-  const pass = localStorage.getItem('master_pass');
-  if(!pass) openPage('setupCard'); else openPage('loginCard');
-}
-function setLangInline(lang){
-  currentLang = lang;
-  localStorage.setItem('app_lang', lang);
-  applyLang();
-}
-function applyLang(){
-  const t = TEXTS[currentLang];
-  if(!t) return;
-  el('setupTitle').textContent = t.setupTitle;
-  el('loginTitle').textContent = t.loginTitle;
-  el('appTitle').textContent = t.appTitle;
-  el('dashTitle').textContent = t.dashTitle;
-  el('hospBtn').textContent = t.hospBtn;
-  el('consultBtn').textContent = t.consultBtn;
-  el('fitnessBtn').textContent = t.fitnessBtn;
-  el('tourismBtn').textContent = t.tourismBtn;
-  el('paySectionTitle').textContent = t.paySectionTitle;
-  el('paySectionDesc').textContent = t.paySectionDesc;
-  el('paymentLinkTitle').textContent = t.paymentLinkTitle;
-  el('paymentLinkDesc').textContent = t.paymentLinkDesc;
-  el('changePassTitle').textContent = t.changePassTitle;
-  el('langSettingsTitle').textContent = t.langSettingsTitle;
-  el('hospTitle').textContent = t.hospTitle;
-  el('consultTitle').textContent = t.consultTitle;
-  el('fitnessTitle').textContent = t.fitnessTitle;
-  el('tourismTitle').textContent = t.tourismTitle;
-  el('langIndicator').textContent = (currentLang==='ar') ? 'العربية' : 'English';
-  // update placeholders not exhaustively; keep simple for inputs:
-  el('setupP1').placeholder = (currentLang==='ar') ? 'كلمة السر الجديدة' : 'New password';
-  el('setupP2').placeholder = (currentLang==='ar') ? 'أعد كتابة كلمة السر' : 'Repeat password';
-  el('loginInput').placeholder = (currentLang==='ar') ? 'ادخل كلمة السر' : 'Enter password';
-  el('paymentLinkInput').placeholder = (currentLang==='ar') ? 'ألصق رابط الدفع هنا (https://...)' : 'Paste payment link (https://...)';
-  el('payerName').placeholder = (currentLang==='ar') ? 'اسم حامل البطاقة' : 'Card holder name';
-  el('payAmount').placeholder = (currentLang==='ar') ? 'المبلغ (مثال: 100.00)' : 'Amount (eg. 100.00)';
-}
-
-/* ===========================
-   Auth / Owner password
-   =========================== */
-function doSetInitial(){
-  const p1 = el('setupP1').value.trim();
-  const p2 = el('setupP2').value.trim();
-  if(p1.length < 4) { alert((currentLang==='ar')? 'كلمة السر قصيرة' : 'Password too short'); return; }
-  if(p1 !== p2) { alert((currentLang==='ar')? 'الكلمتان غير متطابقتين' : 'Passwords do not match'); return; }
-  localStorage.setItem('master_pass', p1);
-  localStorage.setItem('is_owner','yes');
-  alert((currentLang==='ar')? 'تم حفظ كلمة السر' : 'Master password saved');
-  applyLang();
-  openPage('loginCard');
-}
-function doLogin(){
-  const provided = el('loginInput').value;
-  const saved = localStorage.getItem('master_pass');
-  if(provided === saved){ 
-    openPage('dashboardCard'); 
-    el('topNav').classList.remove('hidden');
-  } else {
-    alert((currentLang==='ar')? 'كلمة السر خاطئة' : 'Wrong password');
-  }
-}
-function doLogout(){
-  // Clear only session view, not stored password or data
-  hideAllCards();
-  el('langSelect').classList.remove('hidden');
-  // keep language selection visible, but let user choose to relogin
-}
-
-/* change password (owner only) */
-function doChangePassword(){
-  const oldP = el('oldPass').value.trim();
-  const nA = el('newPassA').value.trim();
-  const nB = el('newPassB').value.trim();
-  const saved = localStorage.getItem('master_pass');
-  if(oldP !== saved) { alert((currentLang==='ar')? 'كلمة السر الحالية خاطئة' : 'Current password wrong'); return; }
-  if(nA.length < 4) { alert((currentLang==='ar')? 'كلمة السر الجديدة قصيرة' : 'New password too short'); return; }
-  if(nA !== nB) { alert((currentLang==='ar')? 'الكلمتان الجديدتان غير متطابقتين' : 'New passwords do not match'); return; }
-  localStorage.setItem('master_pass', nA);
-  alert((currentLang==='ar')? 'تم تغيير كلمة السر' : 'Password changed');
-  el('oldPass').value=''; el('newPassA').value=''; el('newPassB').value='';
-}
-
-/* ===========================
-   Sections save/load (owner edits content)
-   =========================== */
-function saveSection(key){
-  const map = { hosp: 'hospText', consult: 'consultText', fitness: 'fitnessText', tourism: 'tourismText' };
-  const area = el(map[key]);
-  if(!area) return;
-  localStorage.setItem('sec_'+key, area.value);
-  alert((currentLang==='ar')? 'تم الحفظ' : 'Saved');
-}
-function loadSections(){
-  ['hosp','consult','fitness','tourism'].forEach(k=>{
-    const v = localStorage.getItem('sec_'+k) || '';
-    el({hosp:'hospText',consult:'consultText',fitness:'fitnessText',tourism:'tourismText'}[k]).value = v;
-  });
-}
-
-/* ===========================
-   Payment Link (owner) + Pay flow
-   - owner stores payment link in localStorage
-   - customers use name+amount -> open hosted link with query params
-   =========================== */
-function savePaymentLink(){
-  // only owner allowed
-  if(localStorage.getItem('is_owner') !== 'yes'){ alert((currentLang==='ar')? 'غير مسموح' : 'Not allowed'); return; }
-  const link = el('paymentLinkInput').value.trim();
-  if(!link){ alert((currentLang==='ar')? 'أدخل رابط صالح' : 'Enter valid link'); return; }
-  localStorage.setItem('owner_payment_link', link);
-  alert((currentLang==='ar')? 'تم حفظ رابط الدفع' : 'Payment link saved');
-}
-function openPaymentLinkForOwner(){
-  const l = localStorage.getItem('owner_payment_link');
-  if(!l) { alert((currentLang==='ar')? 'لا يوجد رابط' : 'No payment link set'); return; }
-  window.open(l,'_blank');
-}
-
-/* init payment UI visual */
-function initPayVisual(){
-  const name = localStorage.getItem('last_payer_name') || 'Guest';
-  const amt = localStorage.getItem('last_amount') || '0.00';
-  el('visName').textContent = name;
-  el('visAmount').textContent = amt;
-  el('payerName').value = name;
-  el('payAmount').value = (amt==='0.00')?'':amt;
-}
-
-/* clear form */
-function clearPayForm(){
-  el('payerName').value=''; el('payAmount').value=''; el('currencySelect').value='USD';
-  el('visName').textContent = 'Guest'; el('visAmount').textContent = '0.00';
-}
-
-/* When user clicks Pay: open hosted payment link (owner's), appends safe query params */
-function handlePay(){
-  const pmLink = localStorage.getItem('owner_payment_link');
-  if(!pmLink){ alert((currentLang==='ar')? 'لم يتم تعيين رابط الدفع بعد' : 'Payment link not set by owner'); return; }
-
-  // collect only non-sensitive info
-  const name = el('payerName').value.trim() || 'Guest';
-  const amount = parseFloat(el('payAmount').value);
-  const currency = el('currencySelect').value || 'USD';
-  if(!amount || amount <= 0){ alert((currentLang==='ar')? 'ادخل مبلغ صالح' : 'Enter a valid amount'); return; }
-
-  // save last used (non-sensitive) locally to show on visual
-  localStorage.setItem('last_payer_name', name);
-  localStorage.setItem('last_amount', amount.toFixed(2));
-
-  // build redirect URL: append safe query params if the host accepts them
-  // NOTE: we do NOT append card numbers or CVV. only non-sensitive.
-  const url = new URL(pmLink);
-  // safe params: name, amount, currency, source=app
-  url.searchParams.set('name', name);
-  url.searchParams.set('amount', amount.toFixed(2));
-  url.searchParams.set('currency', currency);
-  url.searchParams.set('source', 'app');
-
-  // open hosted payment page in new tab
-  window.open(url.toString(), '_blank');
-}
-
-/* load stored payment link into settings if owner */
-function initSettings(){
-  const link = localStorage.getItem('owner_payment_link') || '';
-  el('paymentLinkInput').value = link;
-  // Show or hide settings depending on owner
-  if(localStorage.getItem('is_owner') === 'yes'){
-    el('settingsBtn').style.display = 'inline-block';
-  } else {
-    el('settingsBtn').style.display = 'none';
-  }
-}
-
-/* load non-sensitive saved values */
-function loadNonSensitiveSaved(){
-  const name = localStorage.getItem('last_payer_name') || '';
-  const amount = localStorage.getItem('last_amount') || '';
-  el('payerName').value = name;
-  el('payAmount').value = amount;
-  if(name) el('visName').textContent = name;
-  if(amount) el('visAmount').textContent = amount;
-}
-
-/* ===========================
-   App init on load
-   =========================== */
-window.addEventListener('load', ()=>{
-  // restore language if set
-  const lang = localStorage.getItem('app_lang');
-  if(lang){ currentLang = lang; el('langSelect').classList.add('hidden'); applyLang(); }
-  // if no saved lang, show langSelect (default above)
-  // initialize other UI pieces
-  initSettings();
-  loadSections();
-  // decide initial screen
-  const pass = localStorage.getItem('master_pass');
-  if(!pass){
-    // show language select (unless user already set language)
-    if(!localStorage.getItem('app_lang')){
-      el('langSelect').classList.remove('hidden');
-    } else {
-      openPage('setupCard');
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Booking Faster</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
     }
-  } else {
-    // show language select only if not set, else login
-    if(!localStorage.getItem('app_lang')){ el('langSelect').classList.remove('hidden'); }
-    else openPage('loginCard');
-  }
-  applyLang();
-});
-</script>
+
+    /* شاشة تسجيل الدخول */
+    .login-container {
+      max-width: 380px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .app-logo {
+      width: 90px;
+      height: 90px;
+      background: #007bff;
+      margin: auto;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 35px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .app-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .btn {
+      display: block;
+      width: 95%;
+      margin: 10px auto;
+      padding: 12px;
+      background: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .btn-red {
+      background: #d40000 !important;
+    }
+
+    /* Dashboard */
+    .dashboard {
+      display: none;
+      max-width: 420px;
+      margin: 20px auto;
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+    }
+
+    .dash-title {
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    /* Settings Page */
+    .settings-page {
+      display: none;
+      max-width: 420px;
+      margin: 20px auto;
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+
+    .settings-title {
+      font-size: 22px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .settings-input {
+      width: 95%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #aaa;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+
+    .save-btn {
+      background: green !important;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- صفحة تسجيل الدخول -->
+  <div class="login-container" id="loginPage">
+    <div class="app-logo">BF</div>
+    <div class="app-title">Booking Faster</div>
+
+    <input type="text" id="email" placeholder="Email Address" />
+    <input type="password" id="password" placeholder="Password" />
+
+    <a href="#" class="btn" onclick="login()">Login</a>
+  </div>
+
+  <!-- صفحة الداشبورد -->
+  <div class="dashboard" id="dashboard">
+    <div class="dash-title">Dashboard</div>
+
+    <a class="btn">Hospital Bookings</a>
+    <a class="btn">Medical Consultations</a>
+    <a class="btn">Fitness Plans</a>
+    <a class="btn">Medical Tourism</a>
+    <a class="btn">Change Password</a>
+
+    <!-- زر الإعدادات الجديد -->
+    <a class="btn" onclick="openSettings()">Settings</a>
+
+    <a class="btn btn-red" onclick="logout()">Logout</a>
+  </div>
+
+  <!-- صفحة الإعدادات -->
+  <div class="settings-page" id="settingsPage">
+    <div class="settings-title">Payment Settings</div>
+
+    <label>Unified Payment Link</label>
+    <input type="text" id="paymentLink" class="settings-input" placeholder="Enter your payment URL here">
+
+    <a class="btn save-btn" onclick="saveSettings()">Save</a>
+    <a class="btn btn-red" onclick="backToDashboard()">Back</a>
+  </div>
+
+  <script>
+    function login() {
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("dashboard").style.display = "block";
+    }
+
+    function logout() {
+      document.getElementById("dashboard").style.display = "none";
+      document.getElementById("settingsPage").style.display = "none";
+      document.getElementById("loginPage").style.display = "block";
+    }
+
+    function openSettings() {
+      document.getElementById("dashboard").style.display = "none";
+      document.getElementById("settingsPage").style.display = "block";
+
+      // تحميل الرابط المحفوظ إذا موجود
+      document.getElementById("paymentLink").value =
+        localStorage.getItem("paymentURL") || "";
+    }
+
+    function saveSettings() {
+      let link = document.getElementById("paymentLink").value;
+      localStorage.setItem("paymentURL", link);
+      alert("Payment Link Saved Successfully");
+    }
+
+    function backToDashboard() {
+      document.getElementById("settingsPage").style.display = "none";
+      document.getElementById("dashboard").style.display = "block";
+    }
+  </script>
+
 </body>
 </html>
