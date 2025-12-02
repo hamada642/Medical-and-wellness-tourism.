@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>Medical & Fitness App</title>
+<style>
+    body { font-family: Arial; background:#f2f2f2; margin:0; padding:0; }
+    .center {
+        width: 350px; margin: 60px auto; padding: 25px;
+        background:white; border-radius:12px; box-shadow:0 0 10px #aaa;
+        text-align: center;
+    }
+    input, button {
+        width: 90%; padding:10px; margin:10px 0; border-radius:8px;
+        border:1px solid #aaa; font-size:16px;
+    }
+    button { background:#4CAF50; color:white; cursor:pointer; }
+    .hidden { display:none; }
+</style>
+</head>
+<body>
+
+<!-- شاشة تعيين كلمة السر لأول مرة -->
+<div id="setupBox" class="center hidden">
+    <h3>تعيين كلمة السر لأول مرة</h3>
+    <input id="newPass1" type="password" placeholder="اكتب كلمة السر الجديدة">
+    <input id="newPass2" type="password" placeholder="أعد كتابة كلمة السر">
+    <button onclick="setInitialPassword()">حفظ الكلمة</button>
+</div>
+
+<!-- شاشة تسجيل الدخول -->
+<div id="loginBox" class="center hidden">
+    <h3>تسجيل الدخول</h3>
+    <input id="loginPass" type="password" placeholder="ادخل كلمة السر">
+    <button onclick="login()">دخول</button>
+</div>
+
+<!-- لوحة التحكم -->
+<div id="dashboard" class="center hidden">
+    <h2>لوحة التحكم</h2>
+
+    <p>أهلاً بك، أنت المالك الوحيد للتطبيق.</p>
+
+    <button onclick="showChangePass()">تغيير كلمة السر</button>
+    <button onclick="logout()">تسجيل خروج</button>
+
+    <hr>
+
+    <h3>الأقسام</h3>
+    <button onclick="alert('فتح قسم الحجز الطبي')">حجوزات المستشفيات</button>
+    <button onclick="alert('فتح الاستشارات الطبية')">استشارات طبية</button>
+    <button onclick="alert('فتح اللياقة البدنية')">لياقة بدنية</button>
+    <button onclick="alert('فتح السياحة العلاجية')">سياحة علاجية</button>
+</div>
+
+<!-- شاشة تغيير كلمة السر -->
+<div id="changePassBox" class="center hidden">
+    <h3>تغيير كلمة السر</h3>
+    <input id="oldPass" type="password" placeholder="كلمة السر الحالية">
+    <input id="newPassA" type="password" placeholder="كلمة السر الجديدة">
+    <input id="newPassB" type="password" placeholder="أعد كتابة الجديدة">
+    <button onclick="changePassword()">تغيير</button>
+    <button style="background:#777" onclick="hideChangePass()">إلغاء</button>
+</div>
+
+
+<script>
+/* ===============================
+    فحص هل كلمة السر مخزنة؟
+================================*/
+window.onload = function () {
+
+    let savedPass = localStorage.getItem("app_master_password");
+    let owner = localStorage.getItem("app_is_owner");
+
+    if (!savedPass) {
+        // أول مرة — عيّن كلمة السر
+        document.getElementById("setupBox").classList.remove("hidden");
+    } else {
+        // موجود باسسورد — اظهر شاشة تسجيل الدخول
+        document.getElementById("loginBox").classList.remove("hidden");
+    }
+};
+
+/* ===============================
+    1) تعيين كلمة السر لأول مرة
+================================*/
+function setInitialPassword() {
+    let p1 = document.getElementById("newPass1").value;
+    let p2 = document.getElementById("newPass2").value;
+
+    if (p1.length < 4) {
+        alert("كلمة السر يجب أن تكون 4 أحرف على الأقل");
+        return;
+    }
+
+    if (p1 !== p2) {
+        alert("الكلمتان غير متطابقتان");
+        return;
+    }
+
+    // حفظ كلمة السر + تسجيل المالك الوحيد
+    localStorage.setItem("app_master_password", p1);
+    localStorage.setItem("app_is_owner", "yes");
+
+    alert("تم تعيين كلمة السر!");
+    location.reload();
+}
+
+/* ===============================
+    2) تسجيل الدخول
+================================*/
+function login() {
+    let input = document.getElementById("loginPass").value;
+    let savedPass = localStorage.getItem("app_master_password");
+
+    if (input === savedPass) {
+        // ناجح
+        document.getElementById("loginBox").classList.add("hidden");
+        document.getElementById("dashboard").classList.remove("hidden");
+    } else {
+        alert("كلمة السر خاطئة");
+    }
+}
+
+/* ===============================
+    3) تسجيل خروج
+================================*/
+function logout() {
+    location.reload();
+}
+
+/* ===============================
+    4) اظهار نافذة تغيير كلمة السر
+================================*/
+function showChangePass() {
+    let isOwner = localStorage.getItem("app_is_owner");
+    if (isOwner !== "yes") {
+        alert("غير مسموح – فقط المالك يمكنه تغيير كلمة السر.");
+        return;
+    }
+
+    document.getElementById("dashboard").classList.add("hidden");
+    document.getElementById("changePassBox").classList.remove("hidden");
+}
+
+function hideChangePass() {
+    document.getElementById("changePassBox").classList.add("hidden");
+    document.getElementById("dashboard").classList.remove("hidden");
+}
+
+/* ===============================
+    5) تغيير كلمة السر
+================================*/
+function changePassword() {
+
+    let oldP = document.getElementById("oldPass").value;
+    let newA = document.getElementById("newPassA").value;
+    let newB = document.getElementById("newPassB").value;
+
+    let savedPass = localStorage.getItem("app_master_password");
+
+    if (oldP !== savedPass) {
+        alert("كلمة السر القديمة خاطئة");
+        return;
+    }
+
+    if (newA !== newB) {
+        alert("الكلمتان الجديدتان غير متطابقتان");
+        return;
+    }
+
+    if (newA.length < 4) {
+        alert("كلمة السر الجديدة قصيرة جداً");
+        return;
+    }
+
+    localStorage.setItem("app_master_password", newA);
+
+    alert("تم تغيير كلمة السر!");
+    location.reload();
+}
+
+</script>
+
+</body>
+</html>
